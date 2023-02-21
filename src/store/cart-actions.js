@@ -1,0 +1,59 @@
+import {uiActions} from "./ui-slice";
+import {cartActions} from "./cart-slice";
+
+export const fetchCartData = () => {
+    return async dispatch => {
+        const fetchData = async () => {
+            const response = await fetch('https://react-http-fe919-default-rtdb.europe-west1.firebasedatabase.app/cart.json');
+            if (!response.ok) {
+                throw new Error("Can't fetch car data");
+            }
+            const json = await response.json();
+            return json;
+        };
+        try {
+            const cartData = await fetchData();
+            dispatch(cartActions.replaceCart(cartData));
+        } catch (e) {
+            dispatch(uiActions.showNotification({
+                status: 'error',
+                title: 'Error!',
+                message: 'Fetching cart data failed!'
+            }));
+        }
+    };
+};
+
+export const sendCartData = (cart) => {
+    return async (dispatch) => {
+        dispatch(uiActions.showNotification({
+            status: 'pending',
+            title: 'Sending...',
+            message: 'Sending cart data'
+        }));
+
+        const sendRequest = async () => {
+            const response = await fetch('https://react-http-fe919-default-rtdb.europe-west1.firebasedatabase.app/cart.json', {
+                method: 'PUT',
+                body: JSON.stringify(cart)
+            });
+            if (!response.ok) {
+                throw new Error('Sending cart data failed');
+            }
+        };
+        try {
+            await sendRequest();
+        } catch (e) {
+            dispatch(uiActions.showNotification({
+                status: 'error',
+                title: 'Error!',
+                message: 'Sent cart data failed!'
+            }));
+        }
+        dispatch(uiActions.showNotification({
+            status: 'success',
+            title: 'Success!',
+            message: 'Sent cart data successfully'
+        }));
+    };
+};
